@@ -90,7 +90,9 @@ def generate_header():
         header.write(formatted_file_header(Version()))
         header.write('#ifndef CATCH_AMALGAMATED_HPP_INCLUDED\n')
         header.write('#define CATCH_AMALGAMATED_HPP_INCLUDED\n')
-        print('Concatenated {} headers'.format(concatenate_file(header, starting_header, True)))
+        print(
+            f'Concatenated {concatenate_file(header, starting_header, True)} headers'
+        )
         header.write('#endif // CATCH_AMALGAMATED_HPP_INCLUDED\n')
 
 def generate_cpp():
@@ -101,7 +103,7 @@ def generate_cpp():
         cpp.write('\n#include "catch_amalgamated.hpp"\n')
         for file in cpp_files:
             concatenate_file(cpp, file, False)
-    print('Concatenated {} cpp files'.format(len(cpp_files)))
+    print(f'Concatenated {len(cpp_files)} cpp files')
 
 if __name__ == "__main__":
     generate_header()

@@ -104,13 +104,12 @@ def normalizeFilepath(line):
     # separators, to make the paths relative to Catch2 repo root.
     forwardSlashPath = catchPath.replace('\\', '/')
     if forwardSlashPath in line:
-        line = line.replace(forwardSlashPath + '/', '')
+        line = line.replace(f'{forwardSlashPath}/', '')
     backwardSlashPath = catchPath.replace('/', '\\')
     if backwardSlashPath in line:
         line = line.replace(backwardSlashPath + '\\', '')
 
-    m = langFilenameParser.match(line)
-    if m:
+    if m := langFilenameParser.match(line):
         filepath = m.group(0)
         # go from \ in windows paths to /
         filepath = filepath.replace('\\', '/')
@@ -123,9 +122,7 @@ def normalizeFilepath(line):
 def filterLine(line, isCompact):
     line = normalizeFilepath(line)
 
-    # strip source line numbers
-    m = filelocParser.match(line)
-    if m:
+    if m := filelocParser.match(line):
         # note that this also strips directories, leaving only the filename
         filename, lnum = m.groups()
         lnum = ":<line number>" if lnum else ""
@@ -177,15 +174,14 @@ def get_filteredResultsPath(baseName):
 
 
 def run_test(baseName, args):
-    args[0:0] = [cmdPath]
+    args[:0] = [cmdPath]
     if not os.path.exists(cmdPath):
-        raise Exception("Executable doesn't exist at " + cmdPath)
+        raise Exception(f"Executable doesn't exist at {cmdPath}")
 
     print(args)
     rawResultsPath = get_rawResultsPath(baseName)
-    f = open(rawResultsPath, 'w')
-    subprocess.call(args, stdout=f, stderr=f)
-    f.close()
+    with open(rawResultsPath, 'w') as f:
+        subprocess.call(args, stdout=f, stderr=f)
 
 
 def check_outputs(baseName):
@@ -203,10 +199,9 @@ def check_outputs(baseName):
 
     os.remove(rawResultsPath)
     print()
-    print(baseName + ":")
+    print(f"{baseName}:")
     if os.path.exists(baselinesPath):
-        diffResult = diffFiles(baselinesPath, filteredResultsPath)
-        if diffResult:
+        if diffResult := diffFiles(baselinesPath, filteredResultsPath):
             print('\n'.join(diffResult))
             print("  \n****************************\n  \033[91mResults differed")
             if len(diffResult) > overallResult:
@@ -227,7 +222,7 @@ def approve(baseName, args):
 
 
 print("Running approvals against executable:")
-print("  " + cmdPath)
+print(f"  {cmdPath}")
 
 
 ## special cases first:
@@ -239,7 +234,7 @@ approve("console.swa4", ["~[!nonportable]~[!benchmark]~[approvals] *", "-s", "-w
 ## Common reporter checks: include passes, warn about No Assertions
 reporters = ('console', 'junit', 'xml', 'compact', 'sonarqube', 'tap', 'teamcity', 'automake')
 for reporter in reporters:
-    filename = '{}.sw'.format(reporter)
+    filename = f'{reporter}.sw'
     common_args = ["~[!nonportable]~[!benchmark]~[approvals] *", "-s", "-w", "NoAssertions", "--order", "lex", "--rng-seed", "1"]
     reporter_args = ['-r', reporter]
     approve(filename, common_args + reporter_args)
@@ -247,10 +242,10 @@ for reporter in reporters:
 ## All reporters at the same time
 
 common_args = ["~[!nonportable]~[!benchmark]~[approvals] *", "-s", "-w", "NoAssertions", "--order", "lex", "--rng-seed", "1"]
-filenames = ['{}.sw.multi'.format(reporter) for reporter in reporters]
+filenames = [f'{reporter}.sw.multi' for reporter in reporters]
 reporter_args = []
 for reporter, filename in zip(reporters, filenames):
-    reporter_args += ['-r', '{}::{}'.format(reporter, get_rawResultsPath(filename))]
+    reporter_args += ['-r', f'{reporter}::{get_rawResultsPath(filename)}']
 
 run_test("default.sw.multi", common_args + reporter_args)
 check_outputs("default.sw.multi")

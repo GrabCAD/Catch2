@@ -16,8 +16,7 @@ import xml.etree.ElementTree as ET
 def list_tests(self_test_exe, tags, rng_seed):
     cmd = [self_test_exe, '--reporter', 'xml', '--list-tests', '--order', 'rand',
             '--rng-seed', str(rng_seed)]
-    tags_arg = ','.join('[{}]~[.]'.format(t) for t in tags)
-    if tags_arg:
+    if tags_arg := ','.join(f'[{t}]~[.]' for t in tags):
         cmd.append(tags_arg)
     process = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -29,8 +28,7 @@ def list_tests(self_test_exe, tags, rng_seed):
     result = [elem.text for elem in root.findall('./TestCase/Name')]
 
     if len(result) < 2:
-        raise RuntimeError("Unexpectedly few tests listed (got {})".format(
-            len(result)))
+        raise RuntimeError(f"Unexpectedly few tests listed (got {len(result)})")
     return result
 
 def check_is_sublist_of(shorter, longer):
@@ -39,9 +37,9 @@ def check_is_sublist_of(shorter, longer):
 
     indexes_in_longer = {s: i for i, s in enumerate(longer)}
     for s1, s2 in zip(shorter, shorter[1:]):
-        assert indexes_in_longer[s1] < indexes_in_longer[s2], (
-                '{} comes before {} in longer list.\n'
-                'Longer: {}\nShorter: {}'.format(s2, s1, longer, shorter))
+        assert (
+            indexes_in_longer[s1] < indexes_in_longer[s2]
+        ), f'{s2} comes before {s1} in longer list.\nLonger: {longer}\nShorter: {shorter}'
 
 def main():
     self_test_exe, = sys.argv[1:]
